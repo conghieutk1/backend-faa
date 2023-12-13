@@ -1,6 +1,7 @@
 import express from 'express';
 import homeController from '../controllers/homeController';
 import userController from '../controllers/userController';
+import cameraController from '../controllers/cameraController';
 // import doctorController from '../controllers/doctorController';
 // import patientController from '../controllers/patientController';
 
@@ -23,6 +24,11 @@ let initWebRoutes = (app) => {
     router.put('/api/edit-user', userController.handleEditUser);
     router.delete('/api/delete-user', userController.handleDeleteUser);
     router.get('/api/allcode', userController.GetAllCode);
+
+    router.post(
+        '/api/create-list-camera-from-server',
+        cameraController.handleCreateListCameraFromServer
+    );
 
     return app.use('/', router);
 };
