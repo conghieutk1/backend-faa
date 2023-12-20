@@ -14,7 +14,7 @@ let handleUserLogin = (account, password) => {
                 // Người dùng tồn tại trong hệ thống
                 // Tìm người dùng dựa vào account từ bảng User
                 let user = await db.User.findOne({
-                    attributes: ['id', 'account', 'password'],
+                    attributes: ['id', 'account', 'password', 'role'],
                     where: { account: account },
                     raw: true,
                 });
@@ -44,7 +44,7 @@ let handleUserLogin = (account, password) => {
             } else {
                 // Người dùng không tồn tại trong hệ thống
                 userData.errCode = 1;
-                userData.errMessage = `Your's account isn't exist in our system, plz try other account`;
+                userData.errMessage = `Your's account isn't exist in our system, please try other account`;
             }
             // Trả về kết quả
             resolve(userData);
@@ -119,16 +119,17 @@ let createNewUser = (data) => {
                 resolve({
                     errCode: 1,
                     errMessage:
-                        'Your account is already in used. Plz try another account',
+                        'Your account is already in used. Please try another account',
                 });
             } else {
                 let hashPasswordFromBcryptjs = await hashUserPassword(
                     data.password
                 );
-                console.log('data.account = ' + data.account);
+                // console.log('data.account = ' + data.account);
                 await db.User.create({
                     account: data.account,
                     password: hashPasswordFromBcryptjs,
+                    role: 'R2',
                 });
 
                 resolve({
@@ -145,7 +146,7 @@ let createNewUser = (data) => {
 let deleteUser = (userId) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let user = db.User.findOne({
+            let user = await db.User.findOne({
                 where: { id: userId },
             });
             if (!user) {
@@ -154,13 +155,20 @@ let deleteUser = (userId) => {
                     errMessage: 'The user isnt exist',
                 });
             }
-            await db.User.destroy({
-                where: { id: userId },
-            });
-            resolve({
-                errCode: 0,
-                errMessage: 'The user is deleted',
-            });
+            if (user.role === 'R1') {
+                resolve({
+                    errCode: 3,
+                    errMessage: 'Can not delete admin',
+                });
+            } else {
+                await db.User.destroy({
+                    where: { id: userId },
+                });
+                resolve({
+                    errCode: 0,
+                    errMessage: 'The user is deleted',
+                });
+            }
         } catch (e) {
             reject(e);
         }

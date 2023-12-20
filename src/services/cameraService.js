@@ -42,8 +42,7 @@ let createCameraAndServer = async (data) => {
             if (isExistServer) {
                 resolve({
                     errCode: 1,
-                    errMessage:
-                        'This server is already in the system. Please try another server',
+                    errMessage: 'This server is already in the system',
                 });
             } else {
                 let createdServer = await db.Server.create({
