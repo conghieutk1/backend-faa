@@ -25,10 +25,7 @@ let initWebRoutes = (app) => {
     router.delete('/api/delete-user', userController.handleDeleteUser);
     router.get('/api/allcode', userController.GetAllCode);
 
-    router.post(
-        '/api/create-list-camera-from-server',
-        cameraController.handleCreateListCameraFromServer
-    );
+    router.post('/api/create-list-camera-from-server', cameraController.handleCreateListCameraFromServer);
 
     return app.use('/', router);
 };

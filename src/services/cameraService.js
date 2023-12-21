@@ -37,42 +37,48 @@ let createCameraAndServer = async (data) => {
     return new Promise(async (resolve, reject) => {
         try {
             console.log('data: ', data);
+            let errMessage1 = '',
+                errMessage2 = '';
             let isExistServer = await checkExistServer(data.dataServer.server);
-
-            if (isExistServer) {
-                resolve({
-                    errCode: 1,
-                    errMessage: 'This server is already in the system',
-                });
-            } else {
-                let createdServer = await db.Server.create({
+            let createdServer;
+            if (!isExistServer) {
+                createdServer = await db.Server.create({
                     url: data.dataServer.server,
                     username: data.dataServer.username,
                     password: data.dataServer.password,
-                    userId: data.userInfo.id,
+                    userId: data.userInfoFromStorage.id,
                 });
-
-                for (let i = 0; i < data.arrCameras.length; i++) {
-                    let isExistCamera = await checkExistCamera(
-                        data.arrCameras[i].Id
-                    );
-                    if (!isExistCamera) {
-                        await db.Camera.create({
-                            cameraName: data.arrCameras[i].Name,
-                            serverId: createdServer.id,
-                            status: 'OFFLINE',
-                            authenticationId: data.arrCameras[i].Id,
-                        });
-                    }
-                }
-
-                resolve({
-                    errCode: 0,
-                    errMessage: 'Create camera and server successfully',
+            } else {
+                createdServer = await db.Server.findOne({
+                    where: { url: data.dataServer.server },
                 });
             }
-        } catch (e) {
-            reject(e);
+
+            for (let i = 0; i < data.arrAddedCameras.length; i++) {
+                let isExistCamera = await checkExistCamera(data.arrAddedCameras[i].Id);
+                if (!isExistCamera) {
+                    await db.Camera.create({
+                        cameraName: data.arrAddedCameras[i].Name,
+                        serverId: createdServer != null ? createdServer.id : null,
+                        status: 'OFFLINE',
+                        authenticationId: data.arrAddedCameras[i].Id,
+                    });
+                    if (errMessage1 === '') {
+                        errMessage1 += 'Save this camera successfully';
+                    }
+                }
+            }
+            if (errMessage1 === '') {
+                errMessage2 += 'This camera already exists';
+            }
+
+            resolve({
+                errCode: 0,
+                errMessage1,
+                errMessage2,
+            });
+        } catch (error) {
+            reject(error);
         }
     });
 };
